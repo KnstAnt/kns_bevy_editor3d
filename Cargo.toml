@@ -1,0 +1,59 @@
+[package]
+authors = ["Konstantin Antonov <knstantna@gmail.com>"] 
+edition = "2021"
+name = "kns_bevy_editor3d"
+publish = false
+version = "0.1.0"
+license = "MIT or Apache-2.0"
+
+[profile.dev]
+overflow-checks = true
+debug-assertions = true
+debug = true
+codegen-units = 16
+lto = false
+incremental = true
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[dependencies]
+bevy = { version = "0.10.1", default-features = false, features = ["bevy_winit", "bevy_gltf", "png", "x11", "bevy_render", "bevy_core_pipeline"] }
+bevy_gltf = { version = "0.10.1", default-features = false }
+bevy_reflect = { version = "0.10.1", features = ["bevy"] }
+bevy_rapier3d = { version = "0.21.0", features = [ "parallel", "simd-nightly", "debug-render", "serde-serialize"] }
+rand = "0.8.5"
+serde = { version = "1.0.154", features = ["serde_derive"] }
+#bevy_kira_audio = { workspace = true }
+rfd = { version = "0.11.2" }
+bevy_common_assets = { version = "0.6.0", features = ["ron", "toml"] }
+bevy_asset_loader = { version = "0.16.0"}
+ron = { version = "0.8.0" }
+#bevy_transform_gizmo = { version = "0.6.0" }
+bevy_transform_gizmo = { git = "https://github.com/woodroww/my_bevy_transform_gizmo.git" }
+bevy_mod_picking = { version = "0.12.0" }
+#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking.git", branch = "beta" }
+bevy_mod_raycast = { version = "0.8.0" }
+bevy_egui = { version = "0.20.0" }
+bevy_debug_grid = { version = "0.1.1" }
+bevy-inspector-egui = { version = "0.18.0" }
+
+env_logger = { version = "0.10.0" }
+log = { version = "0.4.17" }
+
+bevy_prototype_debug_lines = { version = "0.10.0", features = ["3d"] }
+bevy_mod_outline = { version = "0.4" }
+bevy_mod_billboard = { version = "0.3.0" }
+bevy_hanabi = { version = "0.6.0", default-features = false, features = [ "3d" ] }
+bevy_atmosphere = { version = "0.6.0" }
+image = { version = "0.24.5" }
+
+[features]
+
+
+
+
+
+
+
