@@ -5,6 +5,7 @@ Possibilities:
 + Load/save in ron format
 + Recursive use of loaded scenes
 + Manipulation: move, rotate (TODO scaling)
+
 In progress:
 bevy objects: light, animation, etc.
 colliders
