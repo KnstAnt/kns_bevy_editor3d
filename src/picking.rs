@@ -3,7 +3,7 @@ use bevy_mod_picking::*;
 use bevy_mod_raycast::{RaycastSource, RaycastSystem};
 use bevy_transform_gizmo::*;
 
-use crate::filesystem::ObjectType;
+use crate::objects::ObjectType;
 use crate::gui::SelectState;
 
 #[derive(Clone, Reflect)]
@@ -15,28 +15,17 @@ impl Plugin for MyPickingPlugin {
     fn build(&self, app: &mut App) {
         app
             //         .add_startup_system(setup)
-            .add_plugin(bevy_mod_raycast::DefaultRaycastingPlugin::<ObjectRaycastSet>::default())
+            .add_plugins(DefaultPickingPlugins)         
+//            .add_plugin(bevy_mod_raycast::DefaultRaycastingPlugin::<ObjectRaycastSet>::default())
             .add_system(
                 update_raycast_with_cursor
                     .in_base_set(CoreSet::First)
                     .before(RaycastSystem::BuildRays::<ObjectRaycastSet>),
-            )
-            .add_system(process_picking_events.in_base_set(CoreSet::PostUpdate));
+            ) 
+            .add_system(process_picking_events.in_base_set(CoreSet::PostUpdate)) 
+            ;
     }
 }
-/*
-fn setup(
-    mut commands: Commands,
-    grid_query: Query<Entity, With<Grid>>
-) {
-//    log::info!("picking_plugin setup");
-
-    for entity in &grid_query {
-        if let Some(mut entity_commands) = commands.get_entity(entity) {
-            entity_commands.insert(PickingBlocker);
-        }
-    };
-} */
 
 fn update_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
@@ -57,12 +46,12 @@ fn update_raycast_with_cursor(
 
 fn process_picking_events(
     mut commands: Commands,
-    mut events: EventReader<PickingEvent>,
+//    mut events: EventReader<PickingEvent>,
     mut select_state: ResMut<SelectState>,
     parent_query: Query<&Parent>,
-    mut object_query: Query<(&mut Selection, &mut Interaction), With<ObjectType>>,
+//    mut object_query: Query<(&mut Selection, &mut Interaction), With<ObjectType>>, 
 ) {
-    for event in events.iter() {
+/*      for event in events.iter() {
         match event {
             PickingEvent::Selection(e) => {
                 //             info!("A selection event happened: {:?}", e);
@@ -118,12 +107,13 @@ fn process_picking_events(
                     if let Some(mut entity_commands) = commands.get_entity(*entity) {
                         entity_commands
                             .insert(Interaction::None)
-                            .insert(Selection::default());
+                            .insert(Selection::default())
+                            ;
                     }
 
                     select_state.entity = Some(current.clone());
                 }
             }
         }
-    }
+    }  */
 }

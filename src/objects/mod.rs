@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use bevy::asset::{HandleId, LoadState};
 use bevy::prelude::*;
 use bevy_gltf::{GltfMesh, GltfNode};
+use bevy_mod_picking::PickableBundle;
+use bevy_transform_gizmo::GizmoTransformable;
 use ::serde::{Serialize, Deserialize, de::DeserializeSeed};
 use bevy::log;
 use bevy::{
@@ -11,17 +13,21 @@ use bevy::{
         TypeUuid,
     },
 };
-use crate::gui::FileState;
+use crate::gui::{FileState, SelectState};
+use crate::picking::ObjectRaycastSet;
 use crate::{if_none_return, if_none_continue, if_err_return};
 
+pub use self::collider::{ColliderType, CreateColliderEvent, ColliderPlugin};
+use self::gltf::{process_add_gltf_scene, process_add_gltf_mesh};
 pub use self::ron::*;
 pub use self::spawn::CompositeObjectLabel;
 use self::spawn::*;
 
 
 mod ron;
+mod gltf;
 mod spawn;
-
+mod collider;
 
 #[derive(Clone)]
 pub struct AddObjectEvent {
@@ -63,7 +69,6 @@ struct LoadedObjects {
     pub handles: Vec<HandleId>,   
 }
 
-
 #[derive(Default, Debug, Clone, Eq, PartialEq, Hash, Resource, Component, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Resource, Serialize, Deserialize)]
 pub enum ObjectType {
@@ -71,13 +76,13 @@ pub enum ObjectType {
     Empty,
     Scene(PathBuf),
     Mesh(PathBuf),
-    Ron(PathBuf)
+    Ron(PathBuf),
+    Collider(ColliderType),
 }
 
+pub struct ObjectPlugin;
 
-pub struct FilePlugin ;
-
-impl Plugin for FilePlugin {
+impl Plugin for ObjectPlugin {
     fn build(&self, app: &mut App) {
 
         app
@@ -89,6 +94,7 @@ impl Plugin for FilePlugin {
             .add_event::<SetPickableMeshWaiterEvent>()  
             .add_event::<AddGltfMeshEvent>()    
             .add_plugin(RonPlugin)    
+            .add_plugin(ColliderPlugin)    
             .add_system(process_load_object.before(check_load_objects_complete))
             .add_system(check_load_objects_complete.after(process_load_object))
             .add_system(process_load_ron.before(check_load_ron))
@@ -125,7 +131,11 @@ fn process_load_object(
                 let handle: Handle<Ron> = asset_server.load(path.display().to_string());  
                 load_data.handles.push(handle.id());
             },
+
+            ObjectType::Collider(_) => continue,
+
             ObjectType::Empty => continue,
+
         };
 
         log::info!("process_load_object {:?}, {}", object, load_data.handles.len());
@@ -168,6 +178,95 @@ fn check_load_objects_complete(
         .collect::<Vec<HandleId>>();
 
     state.qnt_loading_ogjects = load_data.handles.len();
+}
+
+
+pub fn process_add_object(
+    mut commands: Commands,
+    mut state: ResMut<SelectState>,
+    mut reader: EventReader<AddObjectEvent>,
+    asset_server: Res<AssetServer>,
+    mut gltf_scene_writer: EventWriter<AddGltfSceneEvent>,
+    mut gltf_mesh_writer: EventWriter<AddGltfMeshEvent>,
+    mut ron_writer: EventWriter<AddRonEvent>,
+    mut collider_writer: EventWriter<CreateColliderEvent>,
+) {
+    for AddObjectEvent {
+        entity,
+        object,
+        transform,
+        selected,
+    } in reader.iter() {
+        log::info!("process_add_object");
+
+        let object = if_none_return!(object.clone());
+
+        let transform = if let Some(transform) = transform {
+            transform.clone()
+        } else {
+            Transform::IDENTITY
+        };
+
+        let entity = if_none_return!(entity.clone());
+
+        if let Some(mut entity_commands) = commands.get_entity(entity) {
+            entity_commands
+                .insert(object.clone())
+//                .insert(bevy_mod_raycast::RaycastMesh::<ObjectRaycastSet>::default())
+//                .insert(PickableBundle::default())
+                .insert(GizmoTransformable);
+
+            match object.clone() {
+                ObjectType::Scene(path) => {
+                    gltf_scene_writer.send(AddGltfSceneEvent {
+                        entity,
+                        handle: asset_server.load(path.display().to_string() + "#Scene0"),
+                        transform,
+                    });
+                },
+
+                ObjectType::Mesh(path) => {
+                    gltf_mesh_writer.send(AddGltfMeshEvent {
+                        entity,
+                        handle: asset_server.load(path.display().to_string() + "#Mesh0"),
+                        transform,
+                    });
+                },
+
+                ObjectType::Ron(path) => {
+                    ron_writer.send(AddRonEvent {
+                        entity,
+                        handle: asset_server.load(path.display().to_string()),
+                        transform,
+                    });
+                },
+
+                ObjectType::Collider(collider) => {
+                    collider_writer.send(CreateColliderEvent {
+                        entity,
+                        collider,
+                        transform,
+                    });
+                },
+                
+                ObjectType::Empty => {
+                    entity_commands.insert(SpatialBundle {
+                        transform,
+                        ..Default::default()
+                    });
+                },
+            };
+        }
+
+        if *selected {
+            commands.entity(entity).insert(PickableBundle {
+                interaction: Interaction::Clicked,
+                ..default()
+            });
+
+            state.entity = Some(entity);
+        }
+    }
 }
 
 fn process_load_ron (

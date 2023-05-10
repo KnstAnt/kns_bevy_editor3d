@@ -14,8 +14,6 @@ use bevy::{
     },
 };
 
-use crate::{if_none_return, if_none_continue, if_err_return};
-
 use self::loader::RonLoader;
 use self::spawn::{process_add_ron, process_spawn_ron};
 use self::sawer::process_save_ron;
@@ -90,7 +88,6 @@ impl Plugin for RonPlugin {
         app
             .add_asset::<Ron>()
             .add_asset_loader(RonLoader)
-   //         .init_asset_loader::<RonLoader>()
             .add_event::<LoadRonEvent>() 
             .add_event::<SaveRonEvent>()   
             .add_event::<AddRonEvent>()           

@@ -4,7 +4,7 @@ mod input;
 mod gui;
 mod camera;
 mod my_macro;
-mod filesystem;
+mod objects;
 mod render;
 
 use bevy::app::App;
@@ -15,7 +15,6 @@ use bevy_rapier3d::prelude::*;
 use bevy_transform_gizmo::TransformGizmoPlugin;
 use bevy_debug_grid::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_egui::*;
 
 use crate::editor::MyEditorPlugin;
 
@@ -24,10 +23,8 @@ pub struct AplicationPlugin;
 impl Plugin for AplicationPlugin {
     fn build(&self, app: &mut App) {
         app
-  //          .add_plugin(EguiPlugin)
             .add_plugin(WorldInspectorPlugin::new())
-            .add_plugins(DefaultPickingPlugins)            
-            .add_plugin(DebugCursorPickingPlugin)
+//            .add_plugin(DebugCursorPickingPlugin)
         //    .add_plugin(DebugEventsPickingPlugin)
             .add_plugin(TransformGizmoPlugin::default())
             .add_plugin(DebugLinesPlugin::with_depth_test(true))

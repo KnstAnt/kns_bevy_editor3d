@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use std::path::PathBuf;
 
-use crate::filesystem::*;
+use crate::objects::*;
 
 
 #[derive(Resource, Component)]
@@ -32,6 +32,9 @@ impl MyEditorState {
                 ObjectType::Ron(path) => {
                     get_name(&Some(path))
                 }
+
+                ObjectType::Collider(collider) => collider.to_string(),
+
                 ObjectType::Empty => "empty".to_string(),
             };
         }

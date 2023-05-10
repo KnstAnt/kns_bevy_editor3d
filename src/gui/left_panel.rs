@@ -4,7 +4,7 @@ use rfd::{MessageButtons, MessageLevel};
 
 use super::{FileState, MyEditorState, SelectState};
 use crate::editor::ClearLevelEvent;
-use crate::filesystem::{LoadObjectEvent, ObjectType};
+use crate::objects::{LoadObjectEvent, ObjectType, ColliderType};
 
 pub fn process_left_panel(
     mut editor_state: ResMut<MyEditorState>,
@@ -184,7 +184,13 @@ pub fn process_left_panel(
 
                     ui.collapsing("From bevy mesh", |ui| {});
 
-                    ui.collapsing("primitive", |ui| {});
+                    ui.collapsing("primitive", |ui| {
+                        ui.vertical(|ui| {
+                            if ui.button("Ball").clicked() {
+                                editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Ball(10000) ));
+                            } 
+                        });    
+                    });
                 });
             });
         });

@@ -3,10 +3,10 @@ use bevy::utils::HashMap;
 use bevy::log;
 use bevy::reflect::serde::ReflectSerializer;
 
-use crate::filesystem::{RonNode, Ron};
+use crate::objects::{RonNode, Ron};
 use crate::gui::FileState;
 
-use crate::{if_none_return,  if_err_return, if_none_continue};
+use crate::{if_err_return, if_none_continue};
 
 use super::SaveRonEvent;
 use super::ObjectType;

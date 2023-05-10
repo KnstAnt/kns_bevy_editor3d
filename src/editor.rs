@@ -4,14 +4,13 @@ use bevy_transform_gizmo::{GizmoPickSource, GizmoTransformable};
 
 use crate::camera::*;
 
-use crate::filesystem::*;
+use crate::objects::*;
 use crate::gui::{WindowPlugin, MyEditorState, SelectState, FileState};
 use crate::input::InputEvent;
 use crate::input::Notify;
 use crate::input::{InputPlugin, ButtonControl};
 use crate::picking::*;
 use crate::render::RenderPlugin;
-
 
 pub struct ClearLevelEvent;
 
@@ -49,7 +48,7 @@ impl Plugin for MyEditorPlugin {
             .add_plugin(InputPlugin::<Actions>::default())
             .add_plugin(MyPickingPlugin)
             .add_plugin(CameraPlugin)              
-            .add_plugin(FilePlugin)
+            .add_plugin(ObjectPlugin)
             .add_plugin(RenderPlugin)
             .add_plugin(WindowPlugin)
             .add_event::<ClearLevelEvent>()
@@ -80,9 +79,8 @@ fn setup(
                 ..Default::default()
             },
             bevy_mod_raycast::RaycastSource::<CameraMoveRaycastSet>::new_transform_empty(),
-            bevy_mod_raycast::RaycastSource::<ObjectRaycastSet>::new_transform_empty(),
-            PickingCameraBundle::default(),
-            GizmoPickSource::default(),
+//            bevy_mod_raycast::RaycastSource::<ObjectRaycastSet>::new_transform_empty(),
+            bevy_transform_gizmo::GizmoPickSource::default(),
             MyCamera,
         )); 
 
@@ -154,7 +152,7 @@ fn process_input (
     mut select_state: ResMut<SelectState>,
     mut editor_state: ResMut<MyEditorState>,
     camera_state: Res<CameraState>,
-    pick_query: Query<&RaycastSource<ObjectRaycastSet>>,
+    pick_query: Query<&bevy_mod_raycast::RaycastSource<ObjectRaycastSet>>,
     transform_query: Query<&GlobalTransform>,
     mut reader: EventReader<InputObjectEvent>,
     mut add_writer: EventWriter<AddObjectEvent>,

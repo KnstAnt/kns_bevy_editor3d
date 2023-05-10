@@ -3,7 +3,7 @@ use bevy_prototype_debug_lines::DebugLines;
 
 use crate::gui::{SelectState, RenderState};
 
-use crate::filesystem::{CompositeObjectLabel, ObjectType};
+use crate::objects::{CompositeObjectLabel, ObjectType};
 
 
 //mod navmesh;

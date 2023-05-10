@@ -31,8 +31,8 @@ bevy_common_assets = { version = "0.6.0", features = ["ron", "toml"] }
 bevy_asset_loader = { version = "0.16.0"}
 ron = { version = "0.8.0" }
 #bevy_transform_gizmo = { version = "0.6.0" }
-bevy_transform_gizmo = { git = "https://github.com/woodroww/my_bevy_transform_gizmo.git" }
-bevy_mod_picking = { version = "0.12.0" }
+bevy_transform_gizmo = { git = "https://github.com/KnstAnt/bevy_transform_gizmo" }
+bevy_mod_picking = { version = "0.13.0", features = [ "backend_egui", "backend_rapier", "backend_raycast" ] }
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking.git", branch = "beta" }
 bevy_mod_raycast = { version = "0.8.0" }
 bevy_egui = { version = "0.20.0" }

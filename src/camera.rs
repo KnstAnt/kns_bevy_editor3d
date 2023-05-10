@@ -1,8 +1,9 @@
 use bevy::window::PrimaryWindow;
 use bevy::{ecs::component::Component, input::mouse::MouseMotion};
 use bevy::{prelude::*, log};
-use bevy_mod_picking::PickingBlocker;
+//use bevy_mod_picking::PickingBlocker;
 use bevy_mod_raycast::{ RaycastMethod, RaycastSource, RaycastSystem, };
+use bevy_transform_gizmo::PickingBlocker;
 
 use crate::input::*;
 use crate::{if_err_return, if_none_return};
