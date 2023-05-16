@@ -1,5 +1,4 @@
 use bevy::{prelude::*, log};
-use bevy_mod_picking::*;
 use bevy_transform_gizmo::{GizmoPickSource, GizmoTransformable};
 
 use crate::camera::*;
@@ -19,7 +18,6 @@ pub struct ClearLevelEvent;
 enum Actions {
     #[default]
     None,
-
     ObjectAdd,
     ObjectRemove,
 }
@@ -191,9 +189,16 @@ fn process_input (
                     }               
                 }
 
+                let collider = if select_state.generate_collider {
+                    None
+                } else {
+                    None
+                };
+
                 add_writer.send(AddObjectEvent {
                     entity: Some(entity),
                     object: editor_state.selected_object.clone(),
+                    collider,
                     transform,
                     selected: true,
                 });

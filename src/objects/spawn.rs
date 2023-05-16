@@ -1,21 +1,39 @@
 use bevy::{log, prelude::*, render::primitives::Aabb};
-use bevy_gltf::{GltfMesh, GltfNode};
-use bevy_mod_picking::*;
-use bevy_prototype_debug_lines::DebugLines;
-use bevy_transform_gizmo::{GizmoPickSource, GizmoTransformable};
+use bevy_mod_picking::prelude::*;
 
-use crate::{gui::SelectState, if_err_continue, if_err_return, if_none_return};
+use crate::if_err_continue;
 use rfd::*;
-
-use crate::picking::*;
 
 use super::*;
 
 #[derive(Component, Debug)]
 pub struct CompositeObjectLabel;
 
+#[derive(Component, Resource, Default)]
+pub(crate) struct Resources {
+    pub mesh: Option<Handle<Mesh>>,
+    pub material: Option<Handle<StandardMaterial>>,
+}
 
-pub fn process_set_pickable_mesh(
+pub(crate) fn setup_spawn_resources(
+    mut resources: ResMut<Resources>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    resources.mesh = Some(meshes.add(Mesh::from(shape::UVSphere {
+        radius: 100.,
+        sectors: 12,
+        stacks: 12,
+    })));
+
+    resources.material = Some(materials.add(StandardMaterial {
+        base_color: Color::RED,
+        emissive: Color::rgba_linear(100.0, 0.0, 0.0, 0.0),
+        ..default()
+    }));
+}
+
+pub(crate) fn process_set_pickable_mesh(
     mut commands: Commands,
     mut reader: EventReader<SetPickableMeshEvent>,
     children_query: Query<&Children>,
@@ -23,7 +41,7 @@ pub fn process_set_pickable_mesh(
     mut mesh_query: Query<&Handle<Mesh>, With<Parent>>,
     mut writer: EventWriter<SetPickableMeshWaiterEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    resources: Res<Resources>,
 ) {
     for SetPickableMeshEvent { entity } in reader.iter() {
         if !children_query.contains(*entity) {
@@ -41,40 +59,58 @@ pub fn process_set_pickable_mesh(
             &children_query,
             &mut mesh_query,
             &meshes,
+            &resources,
         );
 
-        let max_y = mesh_data
-            .iter()
-            .map(|aabb| aabb.max().y)
-            .collect::<Vec<f32>>()
-            .into_iter()
-            .max_by(|a, b| a.total_cmp(b))
-            .unwrap_or(0.0f32);
-
-        let label_pos = Vec3::new(0., max_y + 1., 0.);
-
         if let Some(mut entity_commands) = commands.get_entity(*entity) {
-            entity_commands.with_children(|parent| {
+            info!("process_set_pickable_mesh");
+
+            let mut min: Vec3 = Vec3::ZERO;
+            let mut max: Vec3 = Vec3::ZERO;
+    
+            for aabb in mesh_data.into_iter() {
+                min.x = min.x.min(aabb.center.x - aabb.half_extents.x);
+                min.y = min.y.min(aabb.center.y - aabb.half_extents.y);
+                min.z = min.z.min(aabb.center.z - aabb.half_extents.z);
+    
+                max.x = max.x.max(aabb.center.x + aabb.half_extents.x);
+                max.y = max.y.max(aabb.center.y + aabb.half_extents.y);
+                max.z = max.z.max(aabb.center.z + aabb.half_extents.z);
+            }
+
+
+            max -= root_pos;
+            min -= root_pos;
+
+            entity_commands.insert(PbrBundle { 
+                mesh: meshes.add(Mesh::from(shape::Box::from_corners(min, max))),
+                material: resources
+                    .material
+                    .clone()
+                    .expect("process_set_pickable_mesh resources err: no material!"), 
+                ..default()
+            }); 
+
+            entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
+
+            /*             entity_commands.insert(
+                            OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| -> Bubble {
+            //                  info!("Clicked on entity {:?}", entity);
+                                Bubble::Up
+                            })
+                        ); */
+
+            /*entity_commands.with_children(|parent| {
                 parent
                     .spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::UVSphere {
-                            radius: 1.,
-                            sectors: 8,
-                            stacks: 8,
-                        })),
-                        material: materials.add(StandardMaterial {
-                            base_color: Color::RED,
-                            emissive: Color::rgba_linear(100.0, 0.0, 0.0, 0.0),
-                            ..default()
-                        }),
+                        mesh: resources.mesh.expect("process_set_pickable_mesh resources err: no mesh!"),
+                        material: resources.material.expect("process_set_pickable_mesh resources err: no material!"),
                         transform: Transform::from_translation(label_pos),
                         ..default()
                     })
-//                    .insert(bevy_mod_raycast::RaycastMesh::<ObjectRaycastSet>::default())
-//                    .insert(PickableBundle::default())
                     .insert(bevy_transform_gizmo::GizmoTransformable)
                     .insert(CompositeObjectLabel);
-            });
+            }); */
         }
     }
 }
@@ -95,26 +131,43 @@ fn get_childs_with_mesh(
     children_query: &Query<&Children>,
     mesh_query: &Query<&Handle<Mesh>, With<Parent>>,
     meshes: &ResMut<Assets<Mesh>>,
+    resources: &Res<Resources>,
 ) -> Vec<Aabb> {
     let mut res = Vec::new();
 
     if let Ok(children) = children_query.get(entity) {
         for child in children.iter() {
+            let mut entity_commands = if_none_continue!(commands.get_entity(*child));
+
+  /*          entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
+             entity_commands.insert(OnPointer::<Click>::run_callback(
+                |In(event): In<ListenedEvent<Click>>| -> Bubble {
+                    //                  info!("Clicked on entity {:?}", entity);
+                    Bubble::Up
+                },
+            )); */
+
             if let Ok(handle) = mesh_query.get(*child) {
-                if let Some(mut entity_commands) = commands.get_entity(*child) {
-                    entity_commands
-                        .insert(bevy_transform_gizmo::GizmoTransformable)
-//                        .insert(bevy_mod_raycast::RaycastMesh::<ObjectRaycastSet>::default())
-//                        .insert(PickableBundle::default())
-                    ;
-                }
+                entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
 
                 if let Some(mesh) = meshes.get(handle) {
                     if let Some(aabb) = mesh.compute_aabb() {
                         res.push(aabb.clone());
                     }
                 }
-            }
+            }/*  else {
+                entity_commands.insert(PbrBundle {
+                    mesh: resources
+                        .mesh
+                        .clone()
+                        .expect("get_childs_with_mesh resources err: no mesh!"),
+                    material: resources
+                        .material
+                        .clone()
+                        .expect("get_childs_with_mesh resources err: no material!"),
+                    ..default()
+                }); 
+            }*/
 
             res.append(&mut get_childs_with_mesh(
                 root,
@@ -123,6 +176,7 @@ fn get_childs_with_mesh(
                 children_query,
                 mesh_query,
                 meshes,
+                resources,
             ));
         }
     }

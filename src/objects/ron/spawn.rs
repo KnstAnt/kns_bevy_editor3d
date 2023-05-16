@@ -50,6 +50,7 @@ pub fn process_add_ron (
         add_obj_writer.send( AddObjectEvent{ 
             entity: Some(*entity), 
             object: Some(ObjectType::Empty), 
+            collider: None,
             transform: Some(*transform),
             selected: true,
         } );
@@ -88,6 +89,7 @@ fn process_spawn_node(
     writer.send( AddObjectEvent{ 
         entity: Some(entity), 
         object: Some(ron.objects.get(&node.object).expect("process_load_ron err: failed create the node").clone()), 
+        collider: None,
         transform: Some(Transform::from_matrix(Mat4::from_cols_array(&node.transform))),
         selected: false,
     } );

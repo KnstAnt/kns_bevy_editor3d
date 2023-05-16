@@ -3,7 +3,7 @@ use bevy_egui::{egui, EguiContexts};
 //use bevy_mod_picking::PickingEvent;
 use rfd::{MessageButtons, MessageLevel};
 
-use crate::{if_err_return, objects::ObjectType};
+use crate::{if_err_return, objects::ObjectType, picking::PickingEvent};
 
 use super::{FileState, SelectState};
 
@@ -17,7 +17,7 @@ pub fn process_right_panel (
     root_query: Query<Entity, Without<Parent>>,
     object_query: Query<&ObjectType>,
     children_query: Query<&Children, With<ObjectType>>,
-//    mut picking_writer: EventWriter<PickingEvent>,
+    mut picking_writer: EventWriter<PickingEvent>,
 ) {
     let ctx = contexts.ctx_mut();
 
@@ -82,12 +82,13 @@ pub fn process_right_panel (
                        //     &mut select_state,
                             &object_query,
                             &children_query,
-//                            &mut picking_writer,
+                            &mut picking_writer,
                         );
                     }
                 });                 
             });
-        });
+        }); 
+
 }
 
 
@@ -97,7 +98,7 @@ fn show_node (
  //   select_state: &mut ResMut<SelectState>,
     object_query: &Query<&ObjectType>,
     children_query: &Query<&Children, With<ObjectType>>,
-//    picking_writer: &mut EventWriter<PickingEvent>,
+    picking_writer: &mut EventWriter<PickingEvent>,
 ) {
     if let Ok(object_type) = object_query.get(*entity) {
         ui.collapsing("entity_{entity.index()}", |ui| {       
@@ -113,7 +114,7 @@ fn show_node (
                 };
 
                 if ui.button(name).clicked() {
-//                    picking_writer.send(PickingEvent::Clicked(*entity));
+                    picking_writer.send(PickingEvent{entity: *entity});
 
                 //    select_state.entity = Some(*entity);
                 }
@@ -127,7 +128,7 @@ fn show_node (
                              //   select_state,
                                 object_query,
                                 children_query,
- //                               picking_writer,
+                                picking_writer,
                             );
             //           }
                     }

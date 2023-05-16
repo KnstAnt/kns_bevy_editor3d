@@ -1,8 +1,7 @@
 use bevy::window::PrimaryWindow;
 use bevy::{ecs::component::Component, input::mouse::MouseMotion};
 use bevy::{prelude::*, log};
-//use bevy_mod_picking::PickingBlocker;
-use bevy_mod_raycast::{ RaycastMethod, RaycastSource, RaycastSystem, };
+use bevy_mod_raycast::{ RaycastSource, RaycastSystem, };
 use bevy_transform_gizmo::PickingBlocker;
 
 use crate::input::*;
@@ -165,9 +164,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
  //   log::info!("CameraPlugin setup");
- let mut button_control = ButtonControl::<Actions>::new();
-
- //KeyCode::Slash
+    let mut button_control = ButtonControl::<Actions>::new();
 
     button_control.add_action(Actions::CameraZoom, InputAction::Scroll, Notify::OnActive);
 

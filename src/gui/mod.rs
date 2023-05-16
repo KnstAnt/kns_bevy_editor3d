@@ -66,8 +66,8 @@ impl Plugin for WindowPlugin {
                 process_input_events,
                 update_ui_scale_factor_system.after(process_input_events),
                 process_up_panel,
-                process_left_panel,
-            //    process_right_panel,
+                process_left_panel.after(process_up_panel),
+                process_right_panel.after(process_up_panel),
             ));
     }
 }

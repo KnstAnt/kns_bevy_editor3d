@@ -1,5 +1,6 @@
 use bevy::{log, prelude::*};
 use bevy_gltf::{GltfMesh, GltfNode};
+use bevy_mod_picking::prelude::{OnPointer, Click, ListenedEvent, Bubble};
 
 use crate::if_none_return;
 use rfd::*;
@@ -16,6 +17,7 @@ pub fn process_add_gltf_scene(
     for AddGltfSceneEvent {
         entity,
         handle,
+        collider,
         transform,
     } in reader.iter()
     {
@@ -26,7 +28,13 @@ pub fn process_add_gltf_scene(
                 scene: handle.to_owned(),
                 transform: *transform,
                 ..default()
-            });
+            })
+            /* .insert(
+                OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| {
+    //                info!("Clicked on entity {:?}", entity);
+                    Bubble::Up
+                }),
+            ) */;
 
             writer.send(SetPickableMeshEvent { entity: *entity });
         }
@@ -38,10 +46,12 @@ pub fn process_add_gltf_mesh(
     mut reader: EventReader<AddGltfMeshEvent>,
     //    gltf_nodes: Res<Assets<GltfNode>>,
     gltf_meshes: Res<Assets<GltfMesh>>,
+    meshes: Res<Assets<Mesh>>,
 ) {
     for AddGltfMeshEvent {
         entity,
         handle,
+        collider,
         transform,
     } in reader.iter()
     {
@@ -51,6 +61,8 @@ pub fn process_add_gltf_mesh(
 
         if let Some(primitive) = gltf_meshes.get(&handle) {
             if let Some(primitive) = primitive.primitives.first() {
+
+
                 if let Some(material) = primitive.material.clone() {
                     entity_commands.insert((PbrBundle {
                         mesh: primitive.mesh.clone(),
@@ -65,6 +77,17 @@ pub fn process_add_gltf_mesh(
                         ..default()
                     },));
                 };
+
+
+                if let Some(data) = collider {
+                    collider::add_collider_from_mesh(
+                        &mut commands,
+                        entity,
+                        &primitive.mesh,
+                        &meshes,
+                        &data,
+                    );
+                }
             } else {
                 rfd::MessageDialog::new()
                     .set_level(MessageLevel::Error)

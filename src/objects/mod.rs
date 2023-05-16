@@ -17,6 +17,7 @@ use crate::gui::{FileState, SelectState};
 use crate::picking::ObjectRaycastSet;
 use crate::{if_none_return, if_none_continue, if_err_return};
 
+use self::collider::ColliderData;
 pub use self::collider::{ColliderType, CreateColliderEvent, ColliderPlugin};
 use self::gltf::{process_add_gltf_scene, process_add_gltf_mesh};
 pub use self::ron::*;
@@ -33,6 +34,7 @@ mod collider;
 pub struct AddObjectEvent {
     pub entity: Option<Entity>,
     pub object: Option<ObjectType>,
+    pub collider: Option<ColliderData>,
     pub transform: Option<Transform>,
     pub selected: bool,
 }
@@ -41,6 +43,7 @@ pub struct AddObjectEvent {
 pub struct AddGltfSceneEvent {
     pub entity: Entity,
     pub handle: Handle<Scene>,
+    pub collider: Option<ColliderData>,
     pub transform: Transform,
 }
 
@@ -57,6 +60,7 @@ pub struct SetPickableMeshWaiterEvent {
 pub struct AddGltfMeshEvent {
     pub entity: Entity,
     pub handle: Handle<GltfMesh>,
+    pub collider: Option<ColliderData>,
     pub transform: Transform,
 }
 
@@ -69,13 +73,14 @@ struct LoadedObjects {
     pub handles: Vec<HandleId>,   
 }
 
+
 #[derive(Default, Debug, Clone, Eq, PartialEq, Hash, Resource, Component, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Resource, Serialize, Deserialize)]
 pub enum ObjectType {
     #[default]
     Empty,
-    Scene(PathBuf),
-    Mesh(PathBuf),
+    Scene((PathBuf, Option<ColliderData>)),
+    Mesh((PathBuf, Option<ColliderData>)),
     Ron(PathBuf),
     Collider(ColliderType),
 }
@@ -87,6 +92,7 @@ impl Plugin for ObjectPlugin {
 
         app
             .insert_resource(LoadedObjects::default())
+            .insert_resource(Resources::default())
             .add_event::<LoadObjectEvent>()   
             .add_event::<AddObjectEvent>()     
             .add_event::<AddGltfSceneEvent>()    
@@ -94,12 +100,15 @@ impl Plugin for ObjectPlugin {
             .add_event::<SetPickableMeshWaiterEvent>()  
             .add_event::<AddGltfMeshEvent>()    
             .add_plugin(RonPlugin)    
-            .add_plugin(ColliderPlugin)    
+            .add_plugin(ColliderPlugin)  
+            .add_startup_system(setup_spawn_resources)  
             .add_system(process_load_object.before(check_load_objects_complete))
             .add_system(check_load_objects_complete.after(process_load_object))
-            .add_system(process_load_ron.before(check_load_ron))
-            .add_system(check_load_ron)
             .add_systems((
+                check_load_ron.before(process_load_ron),               
+                process_load_ron.after(check_load_ron),
+            ))
+            .add_systems((                
                 process_add_object,
                 process_add_gltf_scene.after(process_add_object),
                 process_add_gltf_mesh.after(process_add_object),
@@ -119,11 +128,11 @@ fn process_load_object(
         let object = if_none_continue!(object);
 
         match object.clone() {
-            ObjectType::Scene(path) => { 
+            ObjectType::Scene((path, _collider)) => { 
                 let handle: Handle<Scene> = asset_server.load(path.display().to_string() + "#Scene0");
                 load_data.handles.push(handle.id());
             },   
-            ObjectType::Mesh(path) => {                 
+            ObjectType::Mesh((path, _collider)) => {                 
                 let handle: Handle<GltfMesh> = asset_server.load(path.display().to_string() + "#Mesh0"); 
                 load_data.handles.push(handle.id());
             },
@@ -194,6 +203,7 @@ pub fn process_add_object(
     for AddObjectEvent {
         entity,
         object,
+        collider,
         transform,
         selected,
     } in reader.iter() {
@@ -212,22 +222,22 @@ pub fn process_add_object(
         if let Some(mut entity_commands) = commands.get_entity(entity) {
             entity_commands
                 .insert(object.clone())
-//                .insert(bevy_mod_raycast::RaycastMesh::<ObjectRaycastSet>::default())
-//                .insert(PickableBundle::default())
                 .insert(GizmoTransformable);
 
             match object.clone() {
-                ObjectType::Scene(path) => {
+                ObjectType::Scene((path, collider)) => {
                     gltf_scene_writer.send(AddGltfSceneEvent {
                         entity,
+                        collider: collider.clone(),
                         handle: asset_server.load(path.display().to_string() + "#Scene0"),
                         transform,
                     });
                 },
 
-                ObjectType::Mesh(path) => {
+                ObjectType::Mesh((path, collider)) => {
                     gltf_mesh_writer.send(AddGltfMeshEvent {
                         entity,
+                        collider: collider.clone(),
                         handle: asset_server.load(path.display().to_string() + "#Mesh0"),
                         transform,
                     });

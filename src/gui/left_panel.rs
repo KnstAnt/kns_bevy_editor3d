@@ -68,7 +68,6 @@ pub fn process_left_panel(
 
                 ui.checkbox(&mut select_state.set_child, "make a child".to_string());
 
-
                 if ui.button("Load ron file").clicked() {
                     //              current_path.push("map");
 
@@ -109,9 +108,10 @@ pub fn process_left_panel(
 
                         editor_state
                             .objects
-                            .insert(rel_path, ObjectType::Scene(path.clone()));
+                            .insert("gltf_scene:".to_string() + &rel_path, ObjectType::Scene((path.clone(), None)));
+
                         load_object_writer.send(LoadObjectEvent {
-                            object: Some(ObjectType::Scene(path.clone())),
+                            object: Some(ObjectType::Scene((path.clone(), None))),
                         });
 
                         /*                    if let Some(scene_name) = path.file_name() {
@@ -141,9 +141,10 @@ pub fn process_left_panel(
 
                         editor_state
                             .objects
-                            .insert(rel_path, ObjectType::Mesh(path.clone()));
+                            .insert("gltf_mesh:".to_string() + &rel_path, ObjectType::Mesh((path.clone(), None)));
+
                         load_object_writer.send(LoadObjectEvent {
-                            object: Some(ObjectType::Mesh(path.clone())),
+                            object: Some(ObjectType::Mesh((path.clone(), None))),
                         });
 
                         /*if let Some(scene_name) = path.file_name() {
@@ -158,6 +159,9 @@ pub fn process_left_panel(
             });
 
             ui.separator();
+
+            ui.checkbox(&mut select_state.generate_collider, "generate collider".to_string());
+
             ui.heading("Objects:");
             let objects = editor_state.objects.clone();
             egui::ScrollArea::vertical()
@@ -180,18 +184,70 @@ pub fn process_left_panel(
 
             ui.collapsing("Add collider", |ui| {
                 ui.vertical(|ui| {
-                    ui.collapsing("From GLTF terrain", |ui| {});
+/*                     ui.collapsing("From GLTF terrain", |ui| {
 
-                    ui.collapsing("From bevy mesh", |ui| {});
+                    });
 
-                    ui.collapsing("primitive", |ui| {
-                        ui.vertical(|ui| {
-                            if ui.button("Ball").clicked() {
-                                editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Ball(10000) ));
-                            } 
+                    ui.collapsing("From bevy mesh", |ui| {
+                        
+                    });
+ */
+/*                     ui.collapsing("primitive", |ui| {
+                        ui.vertical(|ui| { */
+                            ui.horizontal(|ui| {
+                                ui.label("Ball, rad:");
+                                
+                                let mut radius = 1.;
+                                ui.add(egui::DragValue::new(&mut radius).speed(0.1));
+
+                                if ui.button("add").clicked() {
+                                    editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Ball( (radius*10000.) as u32) ));
+                                }                                
+                            });
+
+                            ui.horizontal(|ui| {
+                                ui.label("Cuboid, xyz:");
+                                
+                                let mut x = 1.;
+                                ui.add(egui::DragValue::new(&mut x).speed(0.1));
+                                let mut y = 1.;
+                                ui.add(egui::DragValue::new(&mut y).speed(0.1));
+                                let mut z = 1.;
+                                ui.add(egui::DragValue::new(&mut z).speed(0.1));
+
+                                if ui.button("add").clicked() {
+                                    editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Cuboid(( (x*5000.) as u32, (y*5000.) as u32, (z*5000.) as u32,)) ) );
+                                }                                
+                            }); 
+
+                            ui.horizontal(|ui| {
+                                ui.label("Cylinder, h, rad:");
+                                
+                                let mut height = 1.;
+                                ui.add(egui::DragValue::new(&mut height).speed(0.1));
+                                let mut radius = 1.;
+                                ui.add(egui::DragValue::new(&mut radius).speed(0.1));
+                                
+                                if ui.button("add").clicked() {
+                                    editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Cylinder(( (height*5000.) as u32, (radius*10000.) as u32,)) ) );
+                                }                                
+                            });
+
+                            ui.horizontal(|ui| {
+                                ui.label("Cone, h, rad:");
+                                
+                                let mut height = 1.;
+                                ui.add(egui::DragValue::new(&mut height).speed(0.1));
+                                let mut radius = 1.;
+                                ui.add(egui::DragValue::new(&mut radius).speed(0.1));
+                                
+                                if ui.button("add").clicked() {
+                                    editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Cone(( (height*5000.) as u32, (radius*10000.) as u32,)) ) );
+                                }                                
+                            }); 
                         });    
                     });
                 });
-            });
-        });
+/*             });
+        }); */
 }

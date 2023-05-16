@@ -23,10 +23,10 @@ impl MyEditorState {
     pub fn get_selected_object_name(&self) -> String {
         if let Some(selected_object) = self.selected_object.clone() {
             return match selected_object {
-                ObjectType::Scene(path) => {
+                ObjectType::Scene((path, _collider)) => {
                     get_name(&Some(path))
                 }
-                ObjectType::Mesh(path) => {
+                ObjectType::Mesh((path, _collider)) => {
                     get_name(&Some(path))
                 }
                 ObjectType::Ron(path) => {
@@ -46,6 +46,7 @@ impl MyEditorState {
 #[derive(Default, Resource, Component)]
 pub struct SelectState {
     pub set_child: bool,
+    pub generate_collider: bool,
     pub entity: Option<Entity>,
 }
 
