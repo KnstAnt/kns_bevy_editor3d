@@ -148,29 +148,10 @@ fn process_create_collider(
             commands
                 .entity(*entity)
                 .insert(collider)
-//                .insert(RapierPickTarget::default()) // <- Needed for the rapier picking backend
                 .insert(*transform);
         }
     }
 }
-
-/* fn create_terrain(
-    commands: &mut Commands,
-    entity: &Entity,
-    meshes: &Res<Assets<Mesh>>,
-) -> Option<Collider> {
-    todo
-}
-
-fn create_computed(
-    commands: &mut Commands,
-    entity: &Entity,
-    meshes: &Res<Assets<Mesh>>,
-) -> Option<Collider> {
-    Collider::from_bevy_mesh(mesh: &Mesh, &ComputedColliderShape::TriMesh)
-} */
-
-
 
 pub fn add_collider_from_mesh(
     commands: &mut Commands,

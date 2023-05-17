@@ -1,4 +1,4 @@
-use bevy::{log, prelude::*, render::primitives::Aabb};
+use bevy::{log, prelude::*, render::primitives::Aabb, math::vec4};
 use bevy_mod_picking::prelude::*;
 
 use crate::if_err_continue;
@@ -11,27 +11,38 @@ pub struct CompositeObjectLabel;
 
 #[derive(Component, Resource, Default)]
 pub(crate) struct Resources {
-    pub mesh: Option<Handle<Mesh>>,
+//    pub mesh: Option<Handle<Mesh>>,
     pub material: Option<Handle<StandardMaterial>>,
 }
 
 pub(crate) fn setup_spawn_resources(
     mut resources: ResMut<Resources>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    resources.mesh = Some(meshes.add(Mesh::from(shape::UVSphere {
-        radius: 100.,
-        sectors: 12,
-        stacks: 12,
-    })));
-
     resources.material = Some(materials.add(StandardMaterial {
-        base_color: Color::RED,
-        emissive: Color::rgba_linear(100.0, 0.0, 0.0, 0.0),
+        base_color: Color::rgba(0.3, 0.3, 0.3, 0.3),
+        alpha_mode: AlphaMode::Blend,
         ..default()
     }));
 }
+
+const HIGHLIGHT_TINT: Highlight<StandardMaterial> = Highlight {
+    hovered: Some(HighlightKind::new_dynamic(|matl| StandardMaterial {
+        base_color: matl.base_color + vec4(0.2, 0.0, 0.0, 0.1), 
+        alpha_mode: AlphaMode::Blend,
+        ..matl.to_owned()
+    })),
+    pressed: Some(HighlightKind::new_dynamic(|matl| StandardMaterial {
+        base_color: matl.base_color + vec4(0.0, 0.2, 0.0, 0.2), 
+        alpha_mode: AlphaMode::Blend,
+        ..matl.to_owned()
+    })),
+    selected: Some(HighlightKind::new_dynamic(|matl| StandardMaterial {
+        base_color: matl.base_color + vec4(0.0, 0.0, 0.2, 0.3), 
+        alpha_mode: AlphaMode::Blend,
+        ..matl.to_owned()
+    })),
+};
 
 pub(crate) fn process_set_pickable_mesh(
     mut commands: Commands,
@@ -78,20 +89,14 @@ pub(crate) fn process_set_pickable_mesh(
                 max.z = max.z.max(aabb.center.z + aabb.half_extents.z);
             }
 
-
-            max -= root_pos;
-            min -= root_pos;
-
-            entity_commands.insert(PbrBundle { 
-                mesh: meshes.add(Mesh::from(shape::Box::from_corners(min, max))),
-                material: resources
+            entity_commands
+                .insert(meshes.add(Mesh::from(shape::Box::from_corners(min, max))))
+                .insert(resources
                     .material
                     .clone()
-                    .expect("process_set_pickable_mesh resources err: no material!"), 
-                ..default()
-            }); 
-
-            entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
+                    .expect("process_set_pickable_mesh resources err: no material!"))
+                .insert(HIGHLIGHT_TINT.clone())
+                .insert(bevy_transform_gizmo::GizmoTransformable);
 
             /*             entity_commands.insert(
                             OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| -> Bubble {
@@ -139,14 +144,6 @@ fn get_childs_with_mesh(
         for child in children.iter() {
             let mut entity_commands = if_none_continue!(commands.get_entity(*child));
 
-  /*          entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
-             entity_commands.insert(OnPointer::<Click>::run_callback(
-                |In(event): In<ListenedEvent<Click>>| -> Bubble {
-                    //                  info!("Clicked on entity {:?}", entity);
-                    Bubble::Up
-                },
-            )); */
-
             if let Ok(handle) = mesh_query.get(*child) {
                 entity_commands.insert(bevy_transform_gizmo::GizmoTransformable);
 
@@ -155,19 +152,7 @@ fn get_childs_with_mesh(
                         res.push(aabb.clone());
                     }
                 }
-            }/*  else {
-                entity_commands.insert(PbrBundle {
-                    mesh: resources
-                        .mesh
-                        .clone()
-                        .expect("get_childs_with_mesh resources err: no mesh!"),
-                    material: resources
-                        .material
-                        .clone()
-                        .expect("get_childs_with_mesh resources err: no material!"),
-                    ..default()
-                }); 
-            }*/
+            }
 
             res.append(&mut get_childs_with_mesh(
                 root,

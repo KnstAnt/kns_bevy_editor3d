@@ -158,11 +158,17 @@ pub fn process_left_panel(
                 }
             });
 
+
             ui.separator();
-
-            ui.checkbox(&mut select_state.generate_collider, "generate collider".to_string());
-
             ui.heading("Objects:");
+            
+            ui.collapsing("Auto make collider", |ui| {
+                ui.vertical(|ui| {
+                    ui.checkbox(&mut select_state.generate_collider, "generate collider".to_string());
+                });
+            });
+
+            
             let objects = editor_state.objects.clone();
             egui::ScrollArea::vertical()
                 //       .auto_shrink([false; 2])
@@ -184,14 +190,7 @@ pub fn process_left_panel(
 
             ui.collapsing("Add collider", |ui| {
                 ui.vertical(|ui| {
-/*                     ui.collapsing("From GLTF terrain", |ui| {
 
-                    });
-
-                    ui.collapsing("From bevy mesh", |ui| {
-                        
-                    });
- */
 /*                     ui.collapsing("primitive", |ui| {
                         ui.vertical(|ui| { */
                             ui.horizontal(|ui| {
@@ -245,9 +244,9 @@ pub fn process_left_panel(
                                     editor_state.selected_object = Some(ObjectType::Collider(ColliderType::Cone(( (height*5000.) as u32, (radius*10000.) as u32,)) ) );
                                 }                                
                             }); 
-                        });    
+ 
                     });
                 });
-/*             });
-        }); */
+            });
+ //       }); 
 }

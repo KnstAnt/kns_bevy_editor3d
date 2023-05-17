@@ -77,7 +77,7 @@ fn setup(
                 ..Default::default()
             },
             bevy_mod_raycast::RaycastSource::<CameraMoveRaycastSet>::new_transform_empty(),
-//            bevy_mod_raycast::RaycastSource::<ObjectRaycastSet>::new_transform_empty(),
+            bevy_mod_raycast::RaycastSource::<ObjectRaycastSet>::new_transform_empty(),
             bevy_transform_gizmo::GizmoPickSource::default(),
             MyCamera,
         )); 
@@ -164,8 +164,9 @@ fn process_input (
                 let mut transform = None;
 
                 for pick_source in &pick_query {
-                    //      log::info!("process_input iter");
+                    log::info!("process_input iter");
                     if let Some((_entity, intersection)) = pick_source.get_nearest_intersection() {
+                        log::info!("process_input transform ok");
                         transform = Some(Transform::from_translation(intersection.position()));
                         break;
                     }                            

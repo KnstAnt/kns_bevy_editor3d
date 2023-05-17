@@ -14,7 +14,7 @@ use bevy::{
     },
 };
 use crate::gui::{FileState, SelectState};
-use crate::picking::ObjectRaycastSet;
+use crate::picking::{ObjectRaycastSet, PickingEvent};
 use crate::{if_none_return, if_none_continue, if_err_return};
 
 use self::collider::ColliderData;
@@ -199,6 +199,7 @@ pub fn process_add_object(
     mut gltf_mesh_writer: EventWriter<AddGltfMeshEvent>,
     mut ron_writer: EventWriter<AddRonEvent>,
     mut collider_writer: EventWriter<CreateColliderEvent>,
+    mut picking_writer: EventWriter<PickingEvent>,
 ) {
     for AddObjectEvent {
         entity,
@@ -269,12 +270,14 @@ pub fn process_add_object(
         }
 
         if *selected {
-            commands.entity(entity).insert(PickableBundle {
+            picking_writer.send(PickingEvent { entity });
+
+/*             commands.entity(entity).insert(PickableBundle {
                 interaction: Interaction::Clicked,
                 ..default()
             });
 
-            state.entity = Some(entity);
+            state.entity = Some(entity); */
         }
     }
 }

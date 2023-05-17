@@ -5,6 +5,7 @@ use bevy_mod_raycast::{ RaycastSource, RaycastSystem, };
 use bevy_transform_gizmo::PickingBlocker;
 
 use crate::input::*;
+use crate::picking::ObjectRaycastSet;
 use crate::{if_err_return, if_none_return};
 
 
@@ -137,11 +138,13 @@ impl Plugin for CameraPlugin{
             .add_event::<CameraRotateEvent>()
             .add_event::<CameraDirEvent>()
             .add_plugin(bevy_mod_raycast::DefaultRaycastingPlugin::<CameraMoveRaycastSet>::default())
+            .add_plugin(bevy_mod_raycast::DefaultRaycastingPlugin::<ObjectRaycastSet>::default())
             .add_startup_system(setup)
             .add_system(
                 update_raycast_with_cursor
                     .in_base_set(CoreSet::First)
-                    .before(RaycastSystem::BuildRays::<CameraMoveRaycastSet>),
+                    .before(RaycastSystem::BuildRays::<CameraMoveRaycastSet>)
+                    .before(RaycastSystem::BuildRays::<ObjectRaycastSet>),
             ) 
              .add_systems((
                 process_input_events.before(process_zoom_event),
@@ -177,17 +180,18 @@ fn setup(
 
     commands.insert_resource(button_control);
 
-    commands.insert_resource(bevy_mod_raycast::DefaultPluginState::<CameraMoveRaycastSet>::default().with_debug_cursor());
+    commands.insert_resource(bevy_mod_raycast::DefaultPluginState::<CameraMoveRaycastSet>::default());
+    commands.insert_resource(bevy_mod_raycast::DefaultPluginState::<ObjectRaycastSet>::default());
 
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 100000., subdivisions: 0 })),
-        material: materials.add(Color::rgba(0.0, 0., 0., 0.0).into()),
+        material: materials.add(Color::rgba(0., 0., 0., 0.).into()),
         transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
         ..Default::default() 
     })
     .insert(bevy_mod_raycast::RaycastMesh::<CameraMoveRaycastSet>::default())
-    .insert(bevy_mod_raycast::RaycastMesh::<crate::picking::ObjectRaycastSet>::default())
-    .insert(PickingBlocker)
+    .insert(bevy_mod_raycast::RaycastMesh::<ObjectRaycastSet>::default())
+ //   .insert(PickingBlocker)
     ; 
 }
 
@@ -232,7 +236,8 @@ fn process_input_events(
 
 fn update_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
-    mut query: Query<&mut RaycastSource<CameraMoveRaycastSet>>,
+    mut query_cam: Query<&mut RaycastSource<CameraMoveRaycastSet>>,
+    mut query_obj: Query<&mut RaycastSource<ObjectRaycastSet>>,
 ) {
     // Grab the most recent cursor event if it exists:
 //    log::info!("update_raycast_with_cursor");
@@ -242,9 +247,15 @@ fn update_raycast_with_cursor(
         None => return,
     };
 
-    for mut pick_source in &mut query {        
+    for mut pick_source in &mut query_cam {        
+ //       log::info!("update_raycast_with_cursor camera ok");
         pick_source.cast_method = bevy_mod_raycast::RaycastMethod::Screenspace(cursor_position);
     }
+
+    for mut pick_source in &mut query_obj { 
+ //       log::info!("update_raycast_with_cursor object ok");       
+        pick_source.cast_method = bevy_mod_raycast::RaycastMethod::Screenspace(cursor_position);
+    } 
 }
 
 fn process_cursor_move_event(
@@ -288,6 +299,8 @@ fn process_cursor_move_event(
   //      log::info!("process_cursor_move_event iter");
 
         if let Some((_entity, intersection)) = pick_source.get_nearest_intersection() {
+
+  //          log::info!("process_cursor_move_event intersection ok");
 
             state.target = state.target + move_start_pos - intersection.position();
 
@@ -370,7 +383,7 @@ fn process_move_event(
 
                     if let Some((_entity, intersection)) = raycast_source.get_nearest_intersection() {
                         state.move_start_pos = Some(intersection.position());  
-  //                      log::info!("process_move_event pos ok {:?}", state.move_start_pos);
+      //                  log::info!("process_move_event pos ok {:?}", state.move_start_pos);
                         break; 
                     }    
                 }

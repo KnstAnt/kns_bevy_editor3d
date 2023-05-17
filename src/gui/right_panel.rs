@@ -101,7 +101,7 @@ fn show_node (
     picking_writer: &mut EventWriter<PickingEvent>,
 ) {
     if let Ok(object_type) = object_query.get(*entity) {
-        ui.collapsing("entity_{entity.index()}", |ui| {       
+        ui.collapsing("entity_".to_string() + &entity.index().to_string().as_str(), |ui| {       
 
             ui.vertical(|ui| {
 

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::{Click, PointerEvent};
+use bevy_mod_picking::prelude::{Click, PointerEvent, GlobalHighlight};
 use bevy_mod_picking::selection::{Deselect, PickSelection, Select};
 use bevy_mod_picking::*;
 use bevy_mod_raycast::{RaycastSource, RaycastSystem};
@@ -23,6 +23,7 @@ impl Plugin for MyPickingPlugin {
             .add_plugins(DefaultPickingPlugins)
             .add_event::<PickingEvent>()
             .add_event::<PointerSelectEventWaiter>()
+   //         .add_startup_system(setup)  
             .add_system(
                 update_raycast_with_cursor
                     .in_base_set(CoreSet::First)
@@ -38,6 +39,30 @@ impl Plugin for MyPickingPlugin {
     }
 }
 
+/* fn setup(
+    mut resource: ResMut<GlobalHighlight<StandardMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    resource.hovered = materials.add(StandardMaterial {
+        base_color: Color::rgba(0.1, 0.1, 0.1, 0.1),
+        alpha_mode: AlphaMode::Blend,
+        ..default()
+    });
+
+    resource.pressed = materials.add(StandardMaterial {
+        base_color: Color::rgba(0.1, 0.2, 0.1, 0.1),
+        alpha_mode: AlphaMode::Blend,
+        ..default()
+    });
+
+//    #[cfg(feature = "selection")]
+    resource.selected = materials.add(StandardMaterial {
+        base_color: Color::rgba(0.1, 0.1, 0.2, 0.1),
+        alpha_mode: AlphaMode::Blend,
+        ..default()
+    });
+}
+ */
 fn update_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
     mut query: Query<&mut RaycastSource<ObjectRaycastSet>>,
