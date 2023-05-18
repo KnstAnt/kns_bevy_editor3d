@@ -1,13 +1,11 @@
 use bevy::{prelude::*, log};
-use bevy_transform_gizmo::{GizmoPickSource, GizmoTransformable};
 
 use crate::camera::*;
 
+use crate::if_none_continue;
 use crate::objects::*;
 use crate::gui::{WindowPlugin, MyEditorState, SelectState, FileState};
-use crate::input::InputEvent;
-use crate::input::Notify;
-use crate::input::{InputPlugin, ButtonControl};
+use crate::input::*;
 use crate::picking::*;
 use crate::render::RenderPlugin;
 
@@ -22,13 +20,13 @@ enum Actions {
     ObjectRemove,
 }
 
-pub enum InputObjectType {
+pub enum InputObjectAction {
     Add,
     Delete,
 }
 
 pub struct InputObjectEvent {
-    pub action: InputObjectType,
+    pub action: InputObjectAction,
 }
 
 pub struct MyEditorPlugin ;
@@ -107,11 +105,11 @@ fn process_input_events(
         match name {
 
             Actions::ObjectAdd => {
-                object_writer.send(InputObjectEvent {action: InputObjectType::Add});
+                object_writer.send(InputObjectEvent {action: InputObjectAction::Add});
             },
                         
             Actions::ObjectRemove => {
-                object_writer.send(InputObjectEvent {action: InputObjectType::Delete});
+                object_writer.send(InputObjectEvent {action: InputObjectAction::Delete});
             },
 
             _ => (),
@@ -124,7 +122,7 @@ fn process_clear_level (
     mut select_state: ResMut<SelectState>,
     mut file_state: ResMut<FileState>,
     mut reader: EventReader<ClearLevelEvent>,
-    obj_query: Query<Entity, (With<ObjectType>, Without<Parent>)>,
+    obj_query: Query<Entity, (With<Object>, Without<Parent>)>,
 ) {
     if reader.is_empty() {
         return;
@@ -159,7 +157,7 @@ fn process_input (
         log::info!("process_input");
 
         match action {
-            InputObjectType::Add => {
+            InputObjectAction::Add => {
 
                 let mut transform = None;
 
@@ -191,21 +189,36 @@ fn process_input (
                 }
 
                 let collider = if select_state.generate_collider {
-                    None
+    //                log::info!("process_input collider ok");
+                    Some( ColliderData::new(
+                        ColliderType::FromBevyMesh,
+                        0.3,
+                        1,
+                        1,
+                        1,
+                        1,
+                    ))
                 } else {
                     None
                 };
 
+                let (object_type, path) = if_none_continue!(editor_state.selected_object.clone());
+
+                let object = Object {
+                    object_type,
+                    path: Some(path),
+                    collider,    
+                };
+
                 add_writer.send(AddObjectEvent {
                     entity: Some(entity),
-                    object: editor_state.selected_object.clone(),
-                    collider,
+                    object: Some(object),
                     transform,
                     selected: true,
                 });
             },
 
-            InputObjectType::Delete => {
+            InputObjectAction::Delete => {
                 if let Some(entity) = select_state.entity {
                     if let Some(entity_commands) = commands.get_entity(entity) {
                         entity_commands.despawn_recursive();

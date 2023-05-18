@@ -6,8 +6,8 @@ use crate::objects::*;
 
 #[derive(Resource, Component)]
 pub struct MyEditorState {
-    pub selected_object: Option<ObjectType>,
-    pub objects: HashMap<String, ObjectType>,
+    pub selected_object: Option<(ObjectType, PathBuf)>,
+    pub objects: HashMap<String, (ObjectType, PathBuf)>,
 }
 
 impl Default for MyEditorState {
@@ -21,19 +21,19 @@ impl Default for MyEditorState {
 
 impl MyEditorState {
     pub fn get_selected_object_name(&self) -> String {
-        if let Some(selected_object) = self.selected_object.clone() {
+        if let Some((selected_object, path)) = self.selected_object.clone() {
             return match selected_object {
-                ObjectType::Scene((path, _collider)) => {
+                ObjectType::Scene => {
                     get_name(&Some(path))
                 }
-                ObjectType::Mesh((path, _collider)) => {
+                ObjectType::Mesh => {
                     get_name(&Some(path))
                 }
-                ObjectType::Ron(path) => {
+                ObjectType::Ron => {
                     get_name(&Some(path))
                 }
 
-                ObjectType::Collider(collider) => collider.to_string(),
+                ObjectType::Collider => "collider".to_string(),
 
                 ObjectType::Empty => "empty".to_string(),
             };

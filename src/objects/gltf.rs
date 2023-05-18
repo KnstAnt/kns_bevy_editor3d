@@ -80,6 +80,8 @@ pub fn process_add_gltf_mesh(
 
 
                 if let Some(data) = collider {
+                    log::info!("process_add_gltf_mesh collider");
+
                     collider::add_collider_from_mesh(
                         &mut commands,
                         entity,

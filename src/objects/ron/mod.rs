@@ -18,7 +18,7 @@ use self::loader::RonLoader;
 use self::spawn::{process_add_ron, process_spawn_ron};
 use self::sawer::process_save_ron;
 
-use super::ObjectType;
+use super::Object;
 
 
 mod loader;
@@ -52,7 +52,7 @@ pub struct AddRonEvent {
 #[uuid = "05232afa-11b7-42ba-9217-de0f6f0fe88d"]
 #[reflect(Serialize, Deserialize)]
 pub struct Ron {
-    pub objects: HashMap<usize, ObjectType>,
+    pub objects: HashMap<usize, Object>,
     pub nodes: HashMap<usize, RonNode>,
 }
 

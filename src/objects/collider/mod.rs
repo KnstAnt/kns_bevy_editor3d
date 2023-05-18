@@ -20,41 +20,12 @@ use bevy::{
 const TO_FLOAT: f32 = 10000.0;
 const FROM_FLOAT: f32 = 0.0001;
 
-#[derive(Default, Debug, Clone, Eq, PartialEq, Hash, Resource, Component, Reflect, FromReflect, Serialize, Deserialize)]
-#[reflect(Resource, Serialize, Deserialize)]
-pub struct ColliderData {
-    pub friction: u32,
-    pub collision_group_self: u32,
-    pub collision_group_filter: u32,
-    pub solver_group_self: u32,
-    pub solver_group_filter: u32,
-}
-
-impl ColliderData {
-    fn new(
-        friction: f32,
-        collision_group_self: u32,
-        collision_group_filter: u32,
-        solver_group_self: u32,
-        solver_group_filter: u32,
-    ) -> Self {
-        Self {
-            friction: (friction*TO_FLOAT) as u32,
-            collision_group_self,
-            collision_group_filter,
-            solver_group_self,
-            solver_group_filter,
-        }
-    }
-
-    fn friction(&self) -> f32 { self.friction as f32 * TO_FLOAT }
-}
 
 #[derive(Default, Debug, Clone, Eq, PartialEq, Hash, Resource, Component, Reflect, FromReflect, Serialize, Deserialize)]
 #[reflect(Resource, Serialize, Deserialize)]
 pub enum ColliderType {
     #[default]
-    Empty,   
+    FromBevyMesh,   
 
     Ball(u32), // radius
 
@@ -70,7 +41,7 @@ pub enum ColliderType {
 impl ToString for ColliderType {
     fn to_string(&self) -> String {
         return match self {
-            ColliderType::Empty => "ColliderEmpty".to_string(),
+            ColliderType::FromBevyMesh => "FromBevyMesh".to_string(),
             ColliderType::Ball(_) => "ColliderBall".to_string(),
             ColliderType::Cuboid(_) => "ColliderCuboid".to_string(),
    //         ColliderType::Capsule(_) => "ColliderCapsule".to_string(),
@@ -80,12 +51,44 @@ impl ToString for ColliderType {
     }
 }
 
-pub struct CreateColliderEvent {
-    pub entity: Entity,
-    pub collider: ColliderType,
-    pub transform: Transform,
+#[derive(Default, Debug, Clone, Eq, PartialEq, Hash, Resource, Component, Reflect, FromReflect, Serialize, Deserialize)]
+#[reflect(Resource, Serialize, Deserialize)]
+pub struct ColliderData {
+    pub collider_type: ColliderType,
+    pub friction: u32,
+    pub collision_group_self: u32,
+    pub collision_group_filter: u32,
+    pub solver_group_self: u32,
+    pub solver_group_filter: u32,
 }
 
+impl ColliderData {
+    pub fn new(
+        collider_type: ColliderType,
+        friction: f32,
+        collision_group_self: u32,
+        collision_group_filter: u32,
+        solver_group_self: u32,
+        solver_group_filter: u32,
+    ) -> Self {
+        Self {
+            collider_type,
+            friction: (friction*TO_FLOAT) as u32,
+            collision_group_self,
+            collision_group_filter,
+            solver_group_self,
+            solver_group_filter,
+        }
+    }
+
+    fn friction(&self) -> f32 { self.friction as f32 * TO_FLOAT }
+}
+
+pub struct CreateColliderEvent {
+    pub entity: Entity,
+    pub collider: ColliderData,
+    pub transform: Transform,
+}
 
 pub struct ColliderPlugin;
 
@@ -112,16 +115,16 @@ fn process_create_collider(
         transform,
     } in reader.iter() {
 
-        let collider = match collider {
-            ColliderType::Empty => continue,
+        let collider = match collider.collider_type {
+            ColliderType::FromBevyMesh => continue,
 
-            ColliderType::Ball(radius) => Some(Collider::ball(*radius as f32 * FROM_FLOAT)),
+            ColliderType::Ball(radius) => Some(Collider::ball(radius as f32 * FROM_FLOAT)),
 
             ColliderType::Cuboid((hx, hy, hz)) => 
                 Some(Collider::cuboid(
-                    *hx as f32 * FROM_FLOAT, 
-                    *hy as f32 * FROM_FLOAT, 
-                    *hz as f32 * FROM_FLOAT, 
+                    hx as f32 * FROM_FLOAT, 
+                    hy as f32 * FROM_FLOAT, 
+                    hz as f32 * FROM_FLOAT, 
                 )),
 
 /*             ColliderType::Capsule((a, b, radius)) => 
@@ -133,14 +136,14 @@ fn process_create_collider(
 
             ColliderType::Cylinder((hh, radius)) => 
                 Some(Collider::cylinder(
-                    *hh as f32 * FROM_FLOAT, 
-                    *radius as f32 * FROM_FLOAT, 
+                    hh as f32 * FROM_FLOAT, 
+                    radius as f32 * FROM_FLOAT, 
                 )),
 
             ColliderType::Cone((hh, radius)) => 
                 Some(Collider::cone(
-                    *hh as f32 * FROM_FLOAT, 
-                    *radius as f32 * FROM_FLOAT, 
+                    hh as f32 * FROM_FLOAT, 
+                    radius as f32 * FROM_FLOAT, 
                 )),
         };
 

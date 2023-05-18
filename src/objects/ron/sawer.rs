@@ -9,15 +9,15 @@ use crate::gui::FileState;
 use crate::{if_err_return, if_none_continue};
 
 use super::SaveRonEvent;
-use super::ObjectType;
+use super::Object;
 
 
 pub fn process_save_ron (
     mut state: ResMut<FileState>,
     mut reader: EventReader<SaveRonEvent>,
-    object_query: Query<(Entity, &Transform, &ObjectType)>,
-    children_query: Query<&Children, With<ObjectType>>,
-    parent_query: Query<&Parent, With<ObjectType>>,
+    object_query: Query<(Entity, &Transform, &Object)>,
+    children_query: Query<&Children, With<Object>>,
+    parent_query: Query<&Parent, With<Object>>,
 ) {
     for SaveRonEvent {path, root } in reader.iter() {
 
@@ -90,10 +90,10 @@ pub fn process_save_ron (
 
 fn process_save_node (
     entity: &Entity,
-    object_query: &Query<(Entity, &Transform, &ObjectType)>,
-    children_query: &Query<&Children, With<ObjectType>>,
-    parent_query: &Query<&Parent, With<ObjectType>>,
-    objects: &mut HashMap<ObjectType, usize>,
+    object_query: &Query<(Entity, &Transform, &Object)>,
+    children_query: &Query<&Children, With<Object>>,
+    parent_query: &Query<&Parent, With<Object>>,
+    objects: &mut HashMap<Object, usize>,
     nodes: &mut HashMap<Entity, (RonNode, usize)>,
 ) {
     let (entity, transform, object_type) = if_err_return!(object_query.get(*entity));

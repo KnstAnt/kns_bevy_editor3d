@@ -33,36 +33,11 @@ impl Plugin for MyPickingPlugin {
                 await_select_event.before(process_select_event),
                 process_select_event,
                 process_deselect_event,
-                process_click_event,
+     //           process_click_event,
                 process_picking_events,                
             ));
     }
 }
-
-/* fn setup(
-    mut resource: ResMut<GlobalHighlight<StandardMaterial>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    resource.hovered = materials.add(StandardMaterial {
-        base_color: Color::rgba(0.1, 0.1, 0.1, 0.1),
-        alpha_mode: AlphaMode::Blend,
-        ..default()
-    });
-
-    resource.pressed = materials.add(StandardMaterial {
-        base_color: Color::rgba(0.1, 0.2, 0.1, 0.1),
-        alpha_mode: AlphaMode::Blend,
-        ..default()
-    });
-
-//    #[cfg(feature = "selection")]
-    resource.selected = materials.add(StandardMaterial {
-        base_color: Color::rgba(0.1, 0.1, 0.2, 0.1),
-        alpha_mode: AlphaMode::Blend,
-        ..default()
-    });
-}
- */
 fn update_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
     mut query: Query<&mut RaycastSource<ObjectRaycastSet>>,
@@ -81,12 +56,12 @@ fn update_raycast_with_cursor(
 }
 
 fn process_select_event(
-    mut commands: Commands,
+//    mut commands: Commands,
     mut events: EventReader<PointerEvent<Select>>,
     mut select_state: ResMut<SelectState>,
     parent_query: Query<&Parent>,
     object_query: Query<Option<&PickSelection>, With<ObjectType>>,
-    mut pick_query: Query<&mut PickSelection, Without<ObjectType>>,
+ //   mut pick_query: Query<&mut PickSelection, Without<ObjectType>>,
     mut selections: EventWriter<PointerSelectEventWaiter>,
     mut deselections: EventWriter<PointerEvent<Deselect>>,
 ) {
@@ -127,12 +102,9 @@ fn process_select_event(
                 current,
                 Select,
             ) } );
-
-            //          select_state.entity = Some(current.clone());
-            // entity_commands.insert(PickSelection {is_selected: true});
         }
 
-        info!("select end {:?} {:?}", target, current);
+//        info!("select end {:?} {:?}", target, current);
 
         select_state.entity = Some(current.clone());
     }
@@ -163,14 +135,12 @@ fn process_deselect_event(
         info!("deselect! {:?}", target);
 
         if let Some(state_entity) = select_state.entity {
-            //          if state_entity == *target {
             select_state.entity = None;
-            //          }
         }
     }
 }
 
-fn process_click_event(
+/* fn process_click_event(
     mut commands: Commands,
     mut events: EventReader<PointerEvent<Click>>,
     mut select_state: ResMut<SelectState>,
@@ -187,65 +157,9 @@ fn process_click_event(
         event,
     } in events.iter()
     {
-        info!("click! {:?}", target);
-
-        /*         if object_query.contains(*target) {
-                    select_state.entity = Some(target.clone());
-
-                    info!("click  1");
-
-                    return;
-                }
-
-                let mut current = *target;
-
-                while let Ok(parent) = parent_query.get(current) {
-                    current = parent.get();
-                    if object_query.contains(current) {
-                        info!("click  2");
-                        break;
-                    }
-                }
-
-                if current != *target {
-                    info!("click  3");
-
-                    if let Some(mut entity_commands) = commands.get_entity(*target) {
-                        info!("click  4");
-                     //   entity_commands.insert(PickSelection::default());
-                        deselections.send(PointerEvent::new(
-                            *pointer_id,
-                            pointer_location.to_owned(),
-                            *target,
-                            Deselect,
-                        ));
-                    }
-
-        /*             for mut pick_selection in pick_query.iter_mut() {
-                        if pick_selection.is_selected {
-                            pick_selection.is_selected = false;
-                        }
-                    } */
-
-                    if let Some(mut entity_commands) = commands.get_entity(current) {
-                        info!("click  5");
-                        selections.send(PointerEvent::new(
-                            *pointer_id,
-                            pointer_location.to_owned(),
-                            current,
-                            Select,
-                        ));
-
-              //          select_state.entity = Some(current.clone());
-                       // entity_commands.insert(PickSelection {is_selected: true});
-                    }
-                }
-
-                info!("click end {:?} {:?}", target, current);
-
-          //      select_state.entity = Some(current.clone()); */
+         info!("click! {:?}", target);
     }
-}
+} */
 
 fn process_picking_events(
     mut commands: Commands,
@@ -268,79 +182,3 @@ fn process_picking_events(
         }
     }
 }
-
-/*
-fn process_picking_events(
-    mut commands: Commands,
-    mut events: EventReader<PickingEvent>,
-    mut select_state: ResMut<SelectState>,
-    parent_query: Query<&Parent>,
-    mut object_query: Query<(&mut Selection, &mut Interaction), With<ObjectType>>,
-) {
-      for event in events.iter() {
-        match event {
-            PickingEvent::Selection(e) => {
-                //             info!("A selection event happened: {:?}", e);
-
-                match e {
-                    SelectionEvent::JustSelected(entity) => {
-                        /*                         let mut current = *entity;
-
-                        while let Ok(parent) = parent_query.get(current) {
-                            current = parent.get();
-                            if object_query.contains(current) {
-                                break;
-                            }
-                        }
-
-                        select_state.entity = Some(current.clone()); */
-                    }
-                    SelectionEvent::JustDeselected(entity) => {
-                        if let Some(state_entity) = select_state.entity {
-                            if state_entity == *entity {
-                                select_state.entity = None;
-                            }
-                        }
-                    }
-                }
-            }
-
-            PickingEvent::Hover(e) => {
-                //            info!("Egads! A hover event!? {:?}", e);
-            }
-
-            PickingEvent::Clicked(entity) => {
-                //              info!("Gee Willikers, it's a click! {:?}", entity);
-
-                if object_query.contains(*entity) {
-                    select_state.entity = Some(entity.clone());
-                    return;
-                }
-
-                let mut current = *entity;
-
-                while let Ok(parent) = parent_query.get(current) {
-                    current = parent.get();
-                    if object_query.contains(current) {
-                        break;
-                    }
-                }
-
-                if let Ok((mut selection, mut interaction)) = object_query.get_mut(current) {
-                    *interaction = Interaction::Clicked;
-                    selection.set_selected(true);
-
-                    if let Some(mut entity_commands) = commands.get_entity(*entity) {
-                        entity_commands
-                            .insert(Interaction::None)
-                            .insert(Selection::default())
-                            ;
-                    }
-
-                    select_state.entity = Some(current.clone());
-                }
-            }
-        }
-    }
-}
- */

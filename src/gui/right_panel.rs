@@ -3,7 +3,7 @@ use bevy_egui::{egui, EguiContexts};
 //use bevy_mod_picking::PickingEvent;
 use rfd::{MessageButtons, MessageLevel};
 
-use crate::{if_err_return, objects::ObjectType, picking::PickingEvent};
+use crate::{if_err_return, objects::{ObjectType, Object}, picking::PickingEvent};
 
 use super::{FileState, SelectState};
 
@@ -13,10 +13,10 @@ pub fn process_right_panel (
   //  file_state: Res<FileState>,
     mut select_state: ResMut<SelectState>,
     mut contexts: EguiContexts,
-    transform_query: Query<&Transform, With<ObjectType>>,
+    transform_query: Query<&Transform, With<Object>>,
     root_query: Query<Entity, Without<Parent>>,
-    object_query: Query<&ObjectType>,
-    children_query: Query<&Children, With<ObjectType>>,
+    object_query: Query<&Object>,
+    children_query: Query<&Children, With<Object>>,
     mut picking_writer: EventWriter<PickingEvent>,
 ) {
     let ctx = contexts.ctx_mut();
@@ -96,21 +96,21 @@ fn show_node (
     ui: &mut egui::Ui,
     entity: &Entity,
  //   select_state: &mut ResMut<SelectState>,
-    object_query: &Query<&ObjectType>,
-    children_query: &Query<&Children, With<ObjectType>>,
+    object_query: &Query<&Object>,
+    children_query: &Query<&Children, With<Object>>,
     picking_writer: &mut EventWriter<PickingEvent>,
 ) {
-    if let Ok(object_type) = object_query.get(*entity) {
+    if let Ok(object) = object_query.get(*entity) {
         ui.collapsing("entity_".to_string() + &entity.index().to_string().as_str(), |ui| {       
 
             ui.vertical(|ui| {
 
-                let name = match object_type {
+                let name = match object.object_type {
                     ObjectType::Empty => "Empty",
-                    ObjectType::Scene(_path) => "GLTF Scene",
-                    ObjectType::Mesh(_path) => "GLTF Mesh",
-                    ObjectType::Ron(_path) => "Ron",
-                    ObjectType::Collider(_) => "Collider",
+                    ObjectType::Scene => "GLTF Scene",
+                    ObjectType::Mesh => "GLTF Mesh",
+                    ObjectType::Ron => "Ron",
+                    ObjectType::Collider => "Collider",
                 };
 
                 if ui.button(name).clicked() {

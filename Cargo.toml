@@ -9,7 +9,7 @@ license = "MIT or Apache-2.0"
 [profile.dev]
 overflow-checks = true
 debug-assertions = true
-#debug = true
+debug = true
 codegen-units = 16
 lto = false
 incremental = true
@@ -33,7 +33,6 @@ ron = { version = "0.8.0" }
 #bevy_transform_gizmo = { version = "0.6.0" }
 bevy_transform_gizmo = { git = "https://github.com/KnstAnt/bevy_transform_gizmo" }
 bevy_mod_picking = { version = "0.13.0", features = [ "backend_egui", "backend_rapier", "backend_raycast" ] }
-#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking.git", branch = "beta" }
 bevy_mod_raycast = { version = "0.8.0" }
 bevy_egui = { version = "0.20.0" }
 bevy_debug_grid = { version = "0.1.1" }

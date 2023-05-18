@@ -4,7 +4,7 @@ use rfd::{MessageButtons, MessageLevel};
 
 use super::{FileState, MyEditorState, SelectState};
 use crate::editor::ClearLevelEvent;
-use crate::objects::{LoadObjectEvent, ObjectType, ColliderType};
+use crate::objects::{LoadObjectEvent, ObjectType, ColliderType, Object};
 
 pub fn process_left_panel(
     mut editor_state: ResMut<MyEditorState>,
@@ -81,13 +81,11 @@ pub fn process_left_panel(
                             .display()
                             .to_string()
                             .replace(&file_state.assets_path.display().to_string(), "");
-
+                        
                         editor_state
                             .objects
-                            .insert(rel_path, ObjectType::Ron(path.clone()));
-                        load_object_writer.send(LoadObjectEvent {
-                            object: Some(ObjectType::Ron(path.clone())),
-                        });
+                            .insert(rel_path, (ObjectType::Ron, path.clone()) );
+                        load_object_writer.send(LoadObjectEvent {path: path.clone()});
                     }
                 }
 
@@ -108,19 +106,9 @@ pub fn process_left_panel(
 
                         editor_state
                             .objects
-                            .insert("gltf_scene:".to_string() + &rel_path, ObjectType::Scene((path.clone(), None)));
+                            .insert("gltf_scene:".to_string() + &rel_path, (ObjectType::Scene, path.clone()) );
 
-                        load_object_writer.send(LoadObjectEvent {
-                            object: Some(ObjectType::Scene((path.clone(), None))),
-                        });
-
-                        /*                    if let Some(scene_name) = path.file_name() {
-                            if let Some(scene_name) = scene_name.to_str() {
-                                state.objects.insert(scene_name.to_string(), ObjectType::Scene(path.clone()));
-
-                                world.send_event(LoadObjectEvent{object: Some(ObjectType::Scene(path.clone()))});
-                            }
-                        } */
+                        load_object_writer.send(LoadObjectEvent {path: path.clone()});
                     }
                 }
 
@@ -141,19 +129,9 @@ pub fn process_left_panel(
 
                         editor_state
                             .objects
-                            .insert("gltf_mesh:".to_string() + &rel_path, ObjectType::Mesh((path.clone(), None)));
+                            .insert("gltf_mesh:".to_string() + &rel_path,(ObjectType::Mesh, path.clone()) );
 
-                        load_object_writer.send(LoadObjectEvent {
-                            object: Some(ObjectType::Mesh((path.clone(), None))),
-                        });
-
-                        /*if let Some(scene_name) = path.file_name() {
-                            if let Some(scene_name) = scene_name.to_str() {
-                                state.objects.insert(scene_name.to_string(), ObjectType::Mesh(path.clone()));
-
-                                world.send_event(LoadObjectEvent{object: Some(ObjectType::Mesh(path.clone()))});
-                            }
-                        } */
+                        load_object_writer.send(LoadObjectEvent {path: path.clone()});
                     }
                 }
             });
@@ -174,10 +152,10 @@ pub fn process_left_panel(
                 //       .auto_shrink([false; 2])
                 .show(ui, |ui| {
                     ui.vertical(|ui| {
-                        for (name, object_type) in objects.iter() {
+                        for (name, object_data) in objects.iter() {
                             ui.horizontal(|ui| {
                                 if ui.button(name).clicked() {
-                                    editor_state.selected_object = Some(object_type.clone());
+                                    editor_state.selected_object = Some(object_data.to_owned());
                                 }
 
                                 if ui.button(" - ").clicked() {
@@ -188,7 +166,7 @@ pub fn process_left_panel(
                     });
                 });
 
-            ui.collapsing("Add collider", |ui| {
+      /*       ui.collapsing("Add collider", |ui| {
                 ui.vertical(|ui| {
 
 /*                     ui.collapsing("primitive", |ui| {
@@ -245,8 +223,8 @@ pub fn process_left_panel(
                                 }                                
                             }); 
  
-                    });
-                });
+                    }); 
+                });*/
             });
  //       }); 
 }

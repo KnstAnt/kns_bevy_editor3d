@@ -48,7 +48,7 @@ pub(crate) fn process_set_pickable_mesh(
     mut commands: Commands,
     mut reader: EventReader<SetPickableMeshEvent>,
     children_query: Query<&Children>,
-    transform_query: Query<&GlobalTransform, With<ObjectType>>,
+    transform_query: Query<&GlobalTransform, With<Object>>,
     mut mesh_query: Query<&Handle<Mesh>, With<Parent>>,
     mut writer: EventWriter<SetPickableMeshWaiterEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -97,25 +97,6 @@ pub(crate) fn process_set_pickable_mesh(
                     .expect("process_set_pickable_mesh resources err: no material!"))
                 .insert(HIGHLIGHT_TINT.clone())
                 .insert(bevy_transform_gizmo::GizmoTransformable);
-
-            /*             entity_commands.insert(
-                            OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| -> Bubble {
-            //                  info!("Clicked on entity {:?}", entity);
-                                Bubble::Up
-                            })
-                        ); */
-
-            /*entity_commands.with_children(|parent| {
-                parent
-                    .spawn(PbrBundle {
-                        mesh: resources.mesh.expect("process_set_pickable_mesh resources err: no mesh!"),
-                        material: resources.material.expect("process_set_pickable_mesh resources err: no material!"),
-                        transform: Transform::from_translation(label_pos),
-                        ..default()
-                    })
-                    .insert(bevy_transform_gizmo::GizmoTransformable)
-                    .insert(CompositeObjectLabel);
-            }); */
         }
     }
 }
