@@ -7,12 +7,10 @@ use rfd::*;
 
 use super::*;
 
-
-
 pub fn process_add_gltf_scene(
     mut commands: Commands,
     mut reader: EventReader<AddGltfSceneEvent>,
-    mut writer: EventWriter<SetPickableMeshEvent>,
+    mut writer: EventWriter<ProcessNewMeshEvent>,
 ) {
     for AddGltfSceneEvent {
         entity,
@@ -35,8 +33,17 @@ pub fn process_add_gltf_scene(
                     Bubble::Up
                 }),
             ) */;
+            
+            let collider = if let Some(collider) = collider {
+                Some(collider.collider_data.to_owned())
+            } else {
+                None
+            };
 
-            writer.send(SetPickableMeshEvent { entity: *entity });
+            writer.send( ProcessNewMeshEvent { 
+                entity: *entity,
+                collider_data: collider,
+            });
         }
     }
 }
@@ -47,6 +54,7 @@ pub fn process_add_gltf_mesh(
     //    gltf_nodes: Res<Assets<GltfNode>>,
     gltf_meshes: Res<Assets<GltfMesh>>,
     meshes: Res<Assets<Mesh>>,
+    mut collider_writer: EventWriter<CreateColliderEvent>,
 ) {
     for AddGltfMeshEvent {
         entity,
@@ -55,31 +63,40 @@ pub fn process_add_gltf_mesh(
         transform,
     } in reader.iter()
     {
-        log::info!("process_add_gltf_mesh");
-
-        let mut entity_commands = if_none_return!(commands.get_entity(*entity));
+        log::info!("process_add_gltf_mesh");        
 
         if let Some(primitive) = gltf_meshes.get(&handle) {
             if let Some(primitive) = primitive.primitives.first() {
 
-
-                if let Some(material) = primitive.material.clone() {
-                    entity_commands.insert((PbrBundle {
-                        mesh: primitive.mesh.clone(),
-                        transform: *transform,
-                        material,
-                        ..default()
-                    },));
+                if let Some(mut entity_commands) = commands.get_entity(*entity) {
+                    if let Some(material) = primitive.material.clone() {
+                        entity_commands.insert((PbrBundle {
+                            mesh: primitive.mesh.clone(),
+                            transform: *transform,
+                            material,
+                            ..default()
+                        },));
+                    } else {
+                        entity_commands.insert((PbrBundle {
+                            mesh: primitive.mesh.clone(),
+                            transform: *transform,
+                            ..default()
+                        },));
+                    };
                 } else {
-                    entity_commands.insert((PbrBundle {
-                        mesh: primitive.mesh.clone(),
-                        transform: *transform,
-                        ..default()
-                    },));
-                };
+                    continue;
+                }
 
 
-                if let Some(data) = collider {
+                if let Some(collider) = collider {
+                    log::info!("process_add_gltf_mesh collider");
+
+                    collider_writer.send(CreateColliderEvent {
+                        entity: *entity,
+                        collider: collider.to_owned(),
+                        transform: None,
+                    });
+/* 
                     log::info!("process_add_gltf_mesh collider");
 
                     collider::add_collider_from_mesh(
@@ -87,8 +104,8 @@ pub fn process_add_gltf_mesh(
                         entity,
                         &primitive.mesh,
                         &meshes,
-                        &data,
-                    );
+                        &collider.collider_data,
+                    ); */
                 }
             } else {
                 rfd::MessageDialog::new()

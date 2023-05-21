@@ -140,11 +140,11 @@ pub fn process_left_panel(
             ui.separator();
             ui.heading("Objects:");
             
-            ui.collapsing("Auto make collider", |ui| {
-                ui.vertical(|ui| {
-                    ui.checkbox(&mut select_state.generate_collider, "generate collider".to_string());
-                });
-            });
+  //          ui.collapsing("Auto make collider", |ui| {
+   //             ui.vertical(|ui| {
+                    ui.checkbox(&mut select_state.generate_collider, "Auto generate collider".to_string());
+   //             });
+   //         });
 
             
             let objects = editor_state.objects.clone();

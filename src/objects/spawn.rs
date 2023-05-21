@@ -46,7 +46,7 @@ const HIGHLIGHT_TINT: Highlight<StandardMaterial> = Highlight {
 
 pub(crate) fn process_set_pickable_mesh(
     mut commands: Commands,
-    mut reader: EventReader<SetPickableMeshEvent>,
+    mut reader: EventReader<ProcessNewMeshEvent>,
     children_query: Query<&Children>,
     transform_query: Query<&GlobalTransform, With<Object>>,
     mut mesh_query: Query<&Handle<Mesh>, With<Parent>>,
@@ -54,9 +54,9 @@ pub(crate) fn process_set_pickable_mesh(
     mut meshes: ResMut<Assets<Mesh>>,
     resources: Res<Resources>,
 ) {
-    for SetPickableMeshEvent { entity } in reader.iter() {
+    for ProcessNewMeshEvent { entity, collider_data } in reader.iter() {
         if !children_query.contains(*entity) {
-            writer.send(SetPickableMeshWaiterEvent { entity: *entity });
+            writer.send(SetPickableMeshWaiterEvent { entity: *entity, collider_data: collider_data.clone(), });
             continue;
         }
 
@@ -67,6 +67,7 @@ pub(crate) fn process_set_pickable_mesh(
             root_pos,
             &mut commands,
             *entity,
+            collider_data,
             &children_query,
             &mut mesh_query,
             &meshes,
@@ -103,10 +104,10 @@ pub(crate) fn process_set_pickable_mesh(
 
 pub fn await_set_pickable_mesh(
     mut reader: EventReader<SetPickableMeshWaiterEvent>,
-    mut writer: EventWriter<SetPickableMeshEvent>,
+    mut writer: EventWriter<ProcessNewMeshEvent>,
 ) {
-    for SetPickableMeshWaiterEvent { entity } in reader.iter() {
-        writer.send(SetPickableMeshEvent { entity: *entity });
+    for SetPickableMeshWaiterEvent { entity, collider_data } in reader.iter() {
+        writer.send(ProcessNewMeshEvent { entity: *entity, collider_data: collider_data.to_owned() });
     }
 }
 
@@ -114,6 +115,7 @@ fn get_childs_with_mesh(
     root: Vec3,
     commands: &mut Commands,
     entity: Entity,
+    collider_data: &Option<ColliderData>,
     children_query: &Query<&Children>,
     mesh_query: &Query<&Handle<Mesh>, With<Parent>>,
     meshes: &ResMut<Assets<Mesh>>,
@@ -132,6 +134,15 @@ fn get_childs_with_mesh(
                     if let Some(aabb) = mesh.compute_aabb() {
                         res.push(aabb.clone());
                     }
+
+                    if let Some(collider_data) = collider_data{
+                        add_collider_from_mesh(
+                            commands,
+                            &entity,
+                            &mesh,
+                            collider_data,
+                        );
+                    }                    
                 }
             }
 
@@ -139,6 +150,7 @@ fn get_childs_with_mesh(
                 root,
                 commands,
                 *child,
+                collider_data,
                 children_query,
                 mesh_query,
                 meshes,

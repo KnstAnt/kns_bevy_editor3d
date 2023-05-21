@@ -190,14 +190,17 @@ fn process_input (
 
                 let collider = if select_state.generate_collider {
     //                log::info!("process_input collider ok");
-                    Some( ColliderData::new(
-                        ColliderType::FromBevyMesh,
-                        0.3,
-                        1,
-                        1,
-                        1,
-                        1,
-                    ))
+                    Some( Collider { 
+                        collider_type: ColliderType::FromBevyMesh, 
+                        collider_data: ColliderData::new (
+                            0.3, 
+                            true, 
+                            1, 
+                            1, 
+                            1, 
+                            1, 
+                        ),
+                    } )
                 } else {
                     None
                 };

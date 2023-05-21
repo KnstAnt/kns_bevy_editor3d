@@ -5,7 +5,7 @@ use bevy_mod_picking::*;
 use bevy_mod_raycast::{RaycastSource, RaycastSystem};
 
 use crate::gui::SelectState;
-use crate::objects::ObjectType;
+use crate::objects::{ObjectType, Object};
 
 #[derive(Clone, Reflect)]
 pub struct ObjectRaycastSet;
@@ -60,8 +60,8 @@ fn process_select_event(
     mut events: EventReader<PointerEvent<Select>>,
     mut select_state: ResMut<SelectState>,
     parent_query: Query<&Parent>,
-    object_query: Query<Option<&PickSelection>, With<ObjectType>>,
- //   mut pick_query: Query<&mut PickSelection, Without<ObjectType>>,
+    object_query: Query<Option<&PickSelection>, With<Object>>,
+ //   mut pick_query: Query<&mut PickSelection, Without<Object>>,
     mut selections: EventWriter<PointerSelectEventWaiter>,
     mut deselections: EventWriter<PointerEvent<Deselect>>,
 ) {
@@ -83,6 +83,7 @@ fn process_select_event(
 
         while let Ok(parent) = parent_query.get(current) {
             current = parent.get();
+
             if object_query.contains(current) {
                 break;
             }
@@ -134,7 +135,7 @@ fn process_deselect_event(
     {
         info!("deselect! {:?}", target);
 
-        if let Some(state_entity) = select_state.entity {
+        if let Some(_state_entity) = select_state.entity {
             select_state.entity = None;
         }
     }
@@ -165,7 +166,7 @@ fn process_picking_events(
     mut commands: Commands,
     mut events: EventReader<PickingEvent>,
     mut select_state: ResMut<SelectState>,
-    mut object_query: Query<&mut PickSelection, With<ObjectType>>,
+    mut object_query: Query<&mut PickSelection, With<Object>>,
 ) {
     if let Some(PickingEvent { entity }) = events.iter().last() {
         info!("picking! entity: {:?}", entity);

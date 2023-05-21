@@ -40,24 +40,27 @@ pub struct AddObjectEvent {
 pub struct AddGltfSceneEvent {
     pub entity: Entity,
     pub handle: Handle<Scene>,
-    pub collider: Option<ColliderData>,
+    pub collider: Option<Collider>,
     pub transform: Transform,
 }
 
 #[derive(Clone)]
-pub struct SetPickableMeshEvent {
+pub struct ProcessNewMeshEvent {
     pub entity: Entity,
+    pub collider_data: Option<ColliderData>,
 }
+
 #[derive(Clone)]
 pub struct SetPickableMeshWaiterEvent {
     pub entity: Entity,
+    pub collider_data: Option<ColliderData>,
 }
 
 #[derive(Clone)]
 pub struct AddGltfMeshEvent {
     pub entity: Entity,
     pub handle: Handle<GltfMesh>,
-    pub collider: Option<ColliderData>,
+    pub collider: Option<Collider>,
     pub transform: Transform,
 }
 
@@ -89,7 +92,7 @@ pub enum ObjectType {
 pub struct Object {
     pub object_type: ObjectType,
     pub path: Option<PathBuf>,
-    pub collider: Option<ColliderData>,    
+    pub collider: Option<Collider>,    
 }
 
 
@@ -99,10 +102,10 @@ pub struct Object {
 pub enum ObjectType {
     #[default]
     Empty,
-    Scene((PathBuf, Option<ColliderData>)),
-    Mesh((PathBuf, Option<ColliderData>)),
+    Scene((PathBuf, Option<Collider>)),
+    Mesh((PathBuf, Option<Collider>)),
     Ron(PathBuf),
-    Collider(ColliderType),
+    Collider(Collider),
 } */
 
 pub struct ObjectPlugin;
@@ -116,7 +119,7 @@ impl Plugin for ObjectPlugin {
             .add_event::<LoadObjectEvent>()   
             .add_event::<AddObjectEvent>()     
             .add_event::<AddGltfSceneEvent>()    
-            .add_event::<SetPickableMeshEvent>()  
+            .add_event::<ProcessNewMeshEvent>()  
             .add_event::<SetPickableMeshWaiterEvent>()  
             .add_event::<AddGltfMeshEvent>()    
             .add_plugin(RonPlugin)    
@@ -284,7 +287,7 @@ pub fn process_add_object(
                     collider_writer.send(CreateColliderEvent {
                         entity,
                         collider: object.collider.expect("process_add_object no collider!"),
-                        transform,
+                        transform: Some(transform),
                     });
                 },
                 

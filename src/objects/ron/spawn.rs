@@ -1,6 +1,6 @@
 use bevy::{log, prelude::*};
 use crate::{if_none_continue, if_none_return};
-use crate::objects::{SpawnRonEvent, AddObjectEvent, ObjectType, SetPickableMeshEvent, Object};
+use crate::objects::{SpawnRonEvent, AddObjectEvent, ObjectType, Object};
 use super::{Ron, AddRonEvent, RonNode};
 
 pub fn process_spawn_ron (
@@ -35,7 +35,7 @@ pub fn process_add_ron (
     mut reader: EventReader<AddRonEvent>,
     ron_assets: Res<Assets<Ron>>,
     mut add_obj_writer: EventWriter<AddObjectEvent>,
-    mut set_pickable_writer: EventWriter<SetPickableMeshEvent>,
+//    mut set_pickable_writer: EventWriter<ProcessNewMeshEvent>,
 ) {  
     for AddRonEvent {
         entity,
@@ -72,7 +72,7 @@ pub fn process_add_ron (
             );
         }
 
-        set_pickable_writer.send(SetPickableMeshEvent { entity: *entity });
+//        set_pickable_writer.send(ProcessNewMeshEvent { entity: *entity, pickable: true, collider_triangle: false });
     }
 }
 
